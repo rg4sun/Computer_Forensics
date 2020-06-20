@@ -369,5 +369,97 @@ def：通过诱骗或攻击性手段获取犯罪证据
 + 现场取证：除了取硬盘、文件目录，更多的是取 易失性数据，此外还需取 注册表、日志、系统密码等数据
 + 脱机取证：对现场取证时取下的硬盘进行进一步取证，一般对 注册表、进程、服务、文件和目录、日志文件、网络轨迹等进行取证，形成文件，并固定
 
-### Chapter 5:
+### Chapter 5: Unix/Linux 取证与分析
+
+#### 0. Unix/Linux 系统概要
+
++ Unix/Linux系统主要由3部分组成：内核（Kernel）、Shell、文件系统
++ Unix/Linux 文件目录及功能：
+
+<img src="/Users/rgmax/Desktop/取证上分/8.jpg" alt="8" style="zoom:50%;" />
+
+#### 1. Unix/Linux 现场证据获取（Linux的现场证据有哪些？4点）
+
+1. **屏幕信息**
+
+   + 控制台下：setterm -dump 控制台编号；如果只想获取文字信息，直接用管道重定向保存就好
+   + X-Windows下：xwd、xwud截图工具，ScreenShooter、Ksnapshot等截图工具
+
+2. **内存及硬盘信息**
+
+   + 查看硬盘分区：fdisk -l 、more /proc/partitions
+
+   + 挂载设备：mount 分区位置 挂载位置（mount /dev/sdb1 /mnt/usbhd1）
+   + 读取内存信息并转储到移动硬盘上：
+     + dd if=/dev/sdb1 of=/mnt/sdcard/data bs=1024(块大小，单位是byte) count=1024（块数）
+     + 用nc将信息输出到另外一台pc，nc建立监听：
+       + nc -l（启动监听） -p （指定监听端口） 10015（指定的端口） > collect.mem.img (接受数据的文件) &（后台运行）
+       + 参考[Linux 中的 &](https://linux.cn/article-10587-1.html?pr) 、[linux - netcat网络工具-nc](https://baijiahao.baidu.com/s?id=1645748755772816935&wfr=spider&for=pc)
+
+3. **进程信息**
+
+   + who命令：查看当前登录的用户情况。
+   + w命令：该命令也用于显示登录到系统的用户情况,但是与who不同的是,w命令功能更加强大,它不但可以显示哪些用户登录到系统,还可以显示出这些用户当前正在进行的工作,w命令是who命令的—个增强版。
+   + ps命令：进程查看命令，可以查看正在运行的进程及运行的状态、进程是否结束、进程有没有僵死、哪些进程占用了过多的资源等。ps 命令还可以监控后
+     台进程的工作情况,因为后台进程是不和屏幕键盘这些标准输人/输出设备进行通信的,如果需要检测其情况,可以使用ps命令。
+   + top命令：和ps命令的基本作用是相同的,显示系统当前的进程及其状态,但是top命令是一个动态显示过程,可以通过用户按键来不断刷新当前状态。如果在前台执行top命令，它将独占前台，直到用户终止该程序为止
+   + 参考：[w和who命令详解](https://blog.csdn.net/lsbhjshyn/article/details/18401279)、[ps与top命令](https://www.cnblogs.com/yinfutao/p/10622371.html)
+
+4. **网络连接**
+
+   netstat
+
+   + -a: 显示所有Socket，包括正在监听的
+   + -c:  每隔1秒就重新显示一遍，直到用户中断它
+   + -i: 显示所有网络接口的信息，格式同"ipconfig -e”
+   + -n: 以网络IP地址代替名称，显示出网络连接情况
+   + -r: 显示核心路由表。格式同"route -e”"
+   + -t: 显示TCP协议的连接情况
+   + -u: 显示UDP协议的连接情况
+   + -v: 显示正在进行的工作
+
+#### 2. Unix/Linux 电子证据分析
+
+1. 数据预处理
+
+   + 数据备份和分类，尝试对硬盘数据进行部分恢复
+
+2. 日志文件
+
+   + 系统日志：/etc/syslog.conf （缺乏认证模式，易被篡改）
+
+   <img src="/Users/rgmax/Desktop/取证上分/9.jpg" alt="9" style="zoom:50%;" />
+
+   + 子系统日志（连接时间日志、进程统计日志、错误日志）
+
+   <img src="/Users/rgmax/Desktop/取证上分/10.jpg" alt="10" style="zoom:50%;" />
+
+   + 查看日志文件的命令
+
+   <img src="/Users/rgmax/Desktop/取证上分/11.jpg" alt="11" style="zoom:50%;" />
+
+   + 进程统计（lastcomm命令监测系统中任何时候执行的命令）
+   + 程序日志与其他（su命令日志sulog、http服务端Apache日志acces_log、error_log）
+
+3. 其他信息源
+
+   + 账号信息（/etc/passwd）
+   + 时间调度程序（crontab命令用于在一定时间间隔调度一些命令的执行，/etc/crontab，crontab -l 显示用户的crontab文件内容，注意其中的run-parts）
+   + 内核转储文件（用file命令显示内存转储文件来源及原因）
+   + /tmp（临时目录，是整个系统的缓冲区，会周期性自动清除）
+   + 隐藏文件和目录（.folder 以点开头的文件是隐藏的）
+   + Shell（bash的历史文件 .bash_history）
+   + 信任关系（/etc/hosts.equiv 、 rhosts文件）
+   + 非法文件（目录中的可疑文件）
+
+#### 3. Unix/Linux取证与分析工具
+
++ TCT
++ Sleuthkit （TASK）
++ Autopsy
++ SMART
+
+### Chapter 6: 网络取证
+
+
 
